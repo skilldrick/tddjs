@@ -31,10 +31,10 @@ TestCase("NamespaceTest", {
   "test namespacing inside other objects":
   function () {
     var custom = { namespace: tddjs.namespace };
-    custom.namespace("dom.event");
+    custom.namespace("blah.event");
 
-    assertObject(custom.dom.event);
-    assertUndefined(tddjs.dom);
+    assertObject(custom.blah.event);
+    assertUndefined(tddjs.blah);
   }
 });
 
