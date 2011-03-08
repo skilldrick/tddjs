@@ -43,6 +43,22 @@
     this.onTabChange(element, previous);
   }
 
+  function getPanel(element) {
+    if (!element || typeof element.href !== "string") {
+      return null;
+    }
+
+    var target = element.href.replace(/.*#/, "");
+    var panel = document.getElementsByName(target)[0];
+
+    while (panel && panel.tagName.toLowerCase() !== "div") {
+      panel = panel.parentNode;
+    }
+
+    return panel;
+  }
+
+
   tddjs.namespace("ui").tabController = {
     create: create,
     handleTabClick: handleTabClick,
@@ -50,4 +66,5 @@
     onTabChange: function (anchor, previous) {},
     tabTagName: "a"
   };
+
 })();
