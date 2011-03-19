@@ -18,6 +18,8 @@ var tddjs = (function () {
   }
 })();
 
+tddjs.noop = function () {};
+
 (function () {
   var dom = tddjs.namespace("dom");
 

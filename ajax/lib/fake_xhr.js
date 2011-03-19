@@ -1,3 +1,4 @@
 var fakeXMLHttpRequest = {
-  open: stubFn()
+  open: stubFn(),
+  send: stubFn()
 };
