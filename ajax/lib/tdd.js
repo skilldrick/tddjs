@@ -52,3 +52,12 @@ tddjs.isHostMethod = function (object, property) {
   (type == "object" && !!object[property]) ||
   type == "unknown";
 };
+
+tddjs.isLocal = (function () {
+  function isLocal() {
+    return !!(window.location &&
+      window.location.protocol.indexOf("file:") === 0);
+  }
+
+  return isLocal;
+})();

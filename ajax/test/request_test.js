@@ -4,12 +4,14 @@
   TestCase("GetRequestTest", {
     setUp: function () {
       this.ajaxCreate = ajax.create;
+      this.tddjsIsLocal = tddjs.isLocal;
       this.xhr = Object.create(fakeXMLHttpRequest);
       ajax.create = stubFn(this.xhr);
     },
 
     tearDown: function () {
       ajax.create = this.ajaxCreate;
+      tddjs.isLocal = this.tddjsIsLocal;
     },
 
     "test should define get method": function () {
@@ -98,6 +100,19 @@
       this.xhr.onreadystatechange();
 
       assertSame(tddjs.noop, this.xhr.onreadystatechange);
+    },
+
+    "test should call success handler for local requests":
+    function () {
+      this.xhr.readyState = 4;
+      this.xhr.status = 0;
+      var success = stubFn();
+      tddjs.isLocal = stubFn(true);
+
+      ajax.get("file.html", { success: success });
+      this.xhr.onreadystatechange();
+
+      assert(success.called);
     },
   });
 })();
