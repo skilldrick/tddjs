@@ -5,7 +5,7 @@
     var success = stubFn();
     var failure = stubFn();
 
-    ajax.get("/url", {
+    ajax.request("/url", {
       success: success,
       failure: failure
     });
@@ -20,6 +20,7 @@
   }
 
   function setUp() {
+    this.tddjsUrlParams = tddjs.util.urlParams;
     this.tddjsIsLocal = tddjs.isLocal;
     this.ajaxCreate = ajax.create;
     this.xhr = Object.create(fakeXMLHttpRequest);
@@ -27,6 +28,7 @@
   }
 
   function tearDown() {
+    tddjs.util.urlParams = this.tddjsUrlParams;
     tddjs.isLocal = this.tddjsIsLocal;
     ajax.create = this.ajaxCreate;
   }
@@ -39,37 +41,6 @@
       assertFunction(ajax.get);
     },
 
-    "test should throw error without url": function () {
-      assertException(function () {
-        ajax.get();
-      }, "TypeError");
-    },
-
-    "test should obtain an XMLHttpRequest object": function () {
-      ajax.get("/url");
-
-      assert(ajax.create.called);
-    },
-
-    "test should call open with method, url, async flag":
-    function () {
-      var url = "/url";
-      ajax.get(url);
-
-      assertEquals(["GET", url, true], this.xhr.open.args);
-    },
-
-    "test should add onreadystatechange handler": function () {
-      ajax.get("/url");
-
-      assertFunction(this.xhr.onreadystatechange);
-    },
-
-    "test should call send": function () {
-      ajax.get("/url");
-
-      assert(this.xhr.send.called);
-    },
   });
 
   TestCase("ReadyStateHandlerTest", {
@@ -95,7 +66,7 @@
       this.xhr.readyState = 4;
       this.xhr.status = 200;
 
-      ajax.get("/url");
+      ajax.request("/url");
 
       assertNoException(function () {
         this.xhr.onreadystatechange();
@@ -103,7 +74,7 @@
     },
 
     "test should pass null as argument to send": function () {
-      ajax.get("/url");
+      ajax.request("/url");
 
       assertNull(this.xhr.send.args[0]);
     },
@@ -111,7 +82,7 @@
     "test should reset onreadystatechange when complete":
     function () {
       this.xhr.readyState = 4;
-      ajax.get("/url");
+      ajax.request("/url");
 
       this.xhr.onreadystatechange();
 
@@ -143,6 +114,61 @@
       ajax.request("/uri", { method: "POST" });
 
       assertEquals("POST", this.xhr.open.args[0]);
-    }
+    },
+
+    "test should throw error without url": function () {
+      assertException(function () {
+        ajax.request();
+      }, "TypeError");
+    },
+
+    "test should obtain an XMLHttpRequest object": function () {
+      ajax.request("/url");
+
+      assert(ajax.create.called);
+    },
+
+    "test should call open with method, url, async flag":
+    function () {
+      var url = "/url";
+      ajax.request(url);
+
+      assertEquals(["GET", url, true], this.xhr.open.args);
+    },
+
+    "test should add onreadystatechange handler": function () {
+      ajax.request("/url");
+
+      assertFunction(this.xhr.onreadystatechange);
+    },
+
+    "test should call send": function () {
+      ajax.request("/url");
+
+      assert(this.xhr.send.called);
+    },
+
+    "test should encode data": function () {
+      tddjs.util.urlParams = stubFn();
+      var object = { field1: "13", field2: "Lots of data!" };
+
+      ajax.request("/url", { data: object, method: "POST" });
+
+      assertSame(object, tddjs.util.urlParams.args[0]);
+    },
   });
+
+  TestCase("PostRequestTest", {
+    setUp: setUp,
+    tearDown: tearDown,
+
+    "test should call request with POST method": function () {
+      ajax.request = stubFn();
+
+      ajax.post("/url");
+
+      assertEquals("POST", ajax.request.args[1].method);
+    },
+  });
+
 })();

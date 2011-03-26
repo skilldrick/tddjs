@@ -33,12 +33,19 @@
     ajax.request(url, options);
   }
 
+  function post(url, options) {
+    options = tddjs.extend({}, options);
+    options.method = "POST";
+    ajax.request(url, options);
+  }
+
   function request(url, options) {
     if (typeof url !== "string") {
       throw new TypeError("URL should be string");
     }
 
-    options = options || {};
+    options = tddjs.extend({}, options);
+    options.data = tddjs.util.urlParams(options.data);
     var transport = ajax.create();
     transport.open(options.method || "GET", url, true);
 
@@ -52,5 +59,6 @@
   }
 
   ajax.get = get;
+  ajax.post = post;
   ajax.request = request;
 })();
