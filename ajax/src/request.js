@@ -43,7 +43,6 @@
     if (typeof url !== "string") {
       throw new TypeError("URL should be string");
     }
-
     options = tddjs.extend({}, options);
     options.data = tddjs.util.urlParams(options.data);
     var transport = ajax.create();

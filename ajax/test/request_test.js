@@ -5,7 +5,7 @@
     var success = stubFn();
     var failure = stubFn();
 
-    ajax.request("/url", {
+    ajax.get("/url", {
       success: success,
       failure: failure
     });
@@ -32,6 +32,57 @@
     tddjs.isLocal = this.tddjsIsLocal;
     ajax.create = this.ajaxCreate;
   }
+
+  TestCase("RequestTest", {
+    setUp: setUp,
+    tearDown: tearDown,
+
+    "test should use specified request method": function () {
+      ajax.request("/uri", { method: "POST" });
+
+      assertEquals("POST", this.xhr.open.args[0]);
+    },
+
+    "test should throw error without url": function () {
+      assertException(function () {
+        ajax.request();
+      }, "TypeError");
+    },
+
+    "test should obtain an XMLHttpRequest object": function () {
+      ajax.request("/url");
+
+      assert(ajax.create.called);
+    },
+
+    "test should call open with method, url, async flag": function () {
+      var url = "/url";
+      ajax.request(url);
+
+      assertEquals(["GET", url, true], this.xhr.open.args);
+    },
+
+    "test should add onreadystatechange handler": function () {
+      ajax.request("/url");
+
+      assertFunction(this.xhr.onreadystatechange);
+    },
+
+    "test should call send": function () {
+      ajax.request("/url");
+
+      assert(this.xhr.send.called);
+    },
+
+    "test should encode data": function () {
+      tddjs.util.urlParams = stubFn();
+      var object = { field1: "13", field2: "Lots of data!" };
+
+      ajax.request("/url", { data: object, method: "POST" });
+
+      assertSame(object, tddjs.util.urlParams.args[0]);
+    },
+  });
 
   TestCase("GetRequestTest", {
     setUp: setUp,
@@ -106,61 +157,14 @@
     },
   });
 
-  TestCase("RequestTest", {
-    setUp: setUp,
-    tearDown: tearDown,
-
-    "test should use specified request method": function () {
-      ajax.request("/uri", { method: "POST" });
-
-      assertEquals("POST", this.xhr.open.args[0]);
-    },
-
-    "test should throw error without url": function () {
-      assertException(function () {
-        ajax.request();
-      }, "TypeError");
-    },
-
-    "test should obtain an XMLHttpRequest object": function () {
-      ajax.request("/url");
-
-      assert(ajax.create.called);
-    },
-
-    "test should call open with method, url, async flag":
-    function () {
-      var url = "/url";
-      ajax.request(url);
-
-      assertEquals(["GET", url, true], this.xhr.open.args);
-    },
-
-    "test should add onreadystatechange handler": function () {
-      ajax.request("/url");
-
-      assertFunction(this.xhr.onreadystatechange);
-    },
-
-    "test should call send": function () {
-      ajax.request("/url");
-
-      assert(this.xhr.send.called);
-    },
-
-    "test should encode data": function () {
-      tddjs.util.urlParams = stubFn();
-      var object = { field1: "13", field2: "Lots of data!" };
-
-      ajax.request("/url", { data: object, method: "POST" });
-
-      assertSame(object, tddjs.util.urlParams.args[0]);
-    },
-  });
-
   TestCase("PostRequestTest", {
-    setUp: setUp,
-    tearDown: tearDown,
+    setUp: function () {
+      this.ajaxRequest = ajax.request;
+    },
+
+    tearDown: function () {
+      ajax.request = this.ajaxRequest;
+    },
 
     "test should call request with POST method": function () {
       ajax.request = stubFn();

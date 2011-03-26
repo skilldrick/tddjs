@@ -13,70 +13,28 @@ var tddjs = (function () {
 
     return object;
   }
+
   return {
     namespace: namespace
-  }
-})();
-
-tddjs.noop = function () {};
-
-(function () {
-  var dom = tddjs.namespace("dom");
-
-  function addClassName(element, cName) {
-    var regexp = new RegExp("(^|\\s)" + cName + "(\\s|$)");
-
-    if (element && !regexp.test(element.className)) {
-      cName = element.className + " " + cName;
-      element.className = cName.replace(/^\s+|\s+$/g, "");
-    }
-  }
-
-  function removeClassName(element, cName) {
-    var r = new RegExp("(^|\\s)" + cName + "(\\s|$)");
-
-    if (element) {
-      cName = element.className.replace(r, " ");
-      element.className = cName.replace(/^\s+|\s+$/g, "");
-    }
-  }
-
-  dom.addClassName = addClassName;
-  dom.removeClassName = removeClassName;
-})();
-
-tddjs.isHostMethod = function (object, property) {
-  var type = typeof object[property];
-
-  return type == "function" ||
-  (type == "object" && !!object[property]) ||
-  type == "unknown";
-};
-
-tddjs.isLocal = (function () {
-  function isLocal() {
-    return !!(window.location &&
-      window.location.protocol.indexOf("file:") === 0);
-  }
-
-  return isLocal;
-})();
+  };
+}());
 
 tddjs.isOwnProperty = (function () {
   var hasOwn = Object.prototype.hasOwnProperty;
 
-  if (typeof hasOwn === "function") {
+  if (typeof hasOwn == "function") {
     return function (object, property) {
       return hasOwn.call(object, property);
     };
   } else {
-    throw "Not Implemented";
+    // Provide an emulation if you can live with possibly
+    // inaccurate results
   }
-})();
+}());
 
 tddjs.each = (function () {
   // Returns an array of properties that are not exposed
-  // in a for-in loop on the provided object
+  // in a for-in loop
   function unEnumerated(object, properties) {
     var length = properties.length;
 
@@ -110,8 +68,8 @@ tddjs.each = (function () {
 
   var oFixes = unEnumerated({},
     ["toString", "toLocaleString", "valueOf",
-      "hasOwnProperty", "isPrototypeOf",
-      "constructor", "propertyIsEnumerable"]);
+     "hasOwnProperty", "isPrototypeOf",
+     "constructor", "propertyIsEnumerable"]);
 
   var fFixes = unEnumerated(
     function () {}, ["call", "apply", "prototype"]);
@@ -123,7 +81,7 @@ tddjs.each = (function () {
   var needsFix = { "object": oFixes, "function": fFixes };
 
   return function (object, callback) {
-    if (typeof callback !== "function") {
+    if (typeof callback != "function") {
       throw new TypeError("callback is not a function");
     }
 
@@ -150,7 +108,7 @@ tddjs.each = (function () {
       }
     }
   };
-})();
+}());
 
 tddjs.extend = (function () {
   function extend(target, source) {
@@ -168,31 +126,25 @@ tddjs.extend = (function () {
   }
 
   return extend;
-})();
+}());
 
-(function () {
-  if (typeof encodeURIComponent === "undefined") {
-    return;
+tddjs.isHostMethod = (function () {
+  function isHostMethod(object, property) {
+    var type = typeof object[property];
+
+    return type == "function" ||
+           (type == "object" && !!object[property]) ||
+           type == "unknown";
   }
 
-  function urlParams(object) {
-    if (!object) {
-      return "";
-    }
+  return isHostMethod;
+}());
 
-    if (typeof object === "string") {
-      return encodeURI(object);
-    }
-
-    var pieces = [];
-
-    tddjs.each(object, function (prop, val) {
-      pieces.push(encodeURIComponent(prop) + "=" +
-                  encodeURIComponent(val));
-    });
-
-    return pieces.join("&");
+tddjs.isLocal = (function () {
+  function isLocal() {
+    return !!(window.location &&
+           window.location.protocol.indexOf("file:") === 0);
   }
 
-  tddjs.namespace("util").urlParams = urlParams;
-})();
+  return isLocal;
+}());
