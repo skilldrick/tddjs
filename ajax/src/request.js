@@ -7,10 +7,14 @@
 
   function requestComplete(transport, options) {
     var status = transport.status;
-    if (status === 200 || (tddjs.isLocal() && !status)) {
+    if (status === 200 || status === 304 ||
+        (tddjs.isLocal() && !status)) {
       if (typeof options.success === "function") {
         options.success(transport);
       }
+    }
+    else if (typeof options.failure === "function") {
+      options.failure(transport);
     }
   }
 

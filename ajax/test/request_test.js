@@ -1,6 +1,24 @@
 (function () {
   var ajax = tddjs.ajax;
 
+  function forceStatusAndReadyState(xhr, status, rs) {
+    var success = stubFn();
+    var failure = stubFn();
+
+    ajax.get("/url", {
+      success: success,
+      failure: failure
+    });
+
+    xhr.status = status;
+    xhr.readyStateChange(rs);
+
+    return {
+      success: success.called,
+      failure: failure.called
+    };
+  }
+
   TestCase("GetRequestTest", {
     setUp: function () {
       this.ajaxCreate = ajax.create;
@@ -64,14 +82,16 @@
 
     "test should call success handler for status 200":
     function () {
-      this.xhr.readyState = 4;
-      this.xhr.status = 200;
-      var success = stubFn();
+      var request = forceStatusAndReadyState(this.xhr, 200, 4);
 
-      ajax.get("/url", { success: success });
-      this.xhr.onreadystatechange();
+      assert(request.success);
+    },
 
-      assert(success.called);
+    "test should call success handler for status 304":
+    function () {
+      var request = forceStatusAndReadyState(this.xhr, 304, 4);
+
+      assert(request.success);
     },
 
     "test should not throw error without success handler":
@@ -104,15 +124,18 @@
 
     "test should call success handler for local requests":
     function () {
-      this.xhr.readyState = 4;
-      this.xhr.status = 0;
-      var success = stubFn();
       tddjs.isLocal = stubFn(true);
 
-      ajax.get("file.html", { success: success });
-      this.xhr.onreadystatechange();
+      var request = forceStatusAndReadyState(this.xhr, 200, 4);
 
-      assert(success.called);
+      assert(request.success);
+    },
+
+    "test should call failure handler for bad status codes":
+    function () {
+      var request = forceStatusAndReadyState(this.xhr, 404, 4);
+
+      assert(request.failure);
     },
   });
 })();
