@@ -23,6 +23,7 @@
     this.tddjsUrlParams = tddjs.util.urlParams;
     this.tddjsIsLocal = tddjs.isLocal;
     this.ajaxCreate = ajax.create;
+    this.ajaxRequest = ajax.request;
     this.xhr = Object.create(fakeXMLHttpRequest);
     ajax.create = stubFn(this.xhr);
   }
@@ -31,6 +32,7 @@
     tddjs.util.urlParams = this.tddjsUrlParams;
     tddjs.isLocal = this.tddjsIsLocal;
     ajax.create = this.ajaxCreate;
+    ajax.request = this.ajaxRequest;
   }
 
   TestCase("RequestTest", {
@@ -91,6 +93,27 @@
     "test should define get method": function () {
       assertFunction(ajax.get);
     },
+
+    "test should sent data on URL for GET": function () {
+      var url = "/url";
+      var object = { field1: "$13", field2: "Lots of data!" };
+      var expected = url + "?" + tddjs.util.urlParams(object);
+
+      ajax.request(url, { data: object, method: "GET" });
+
+      assertEquals(expected, this.xhr.open.args[1]);
+    },
+
+    "test should not break pre-existing querystring": function () {
+      var url = "/url?page=1";
+      var object = { field1: "$13", field2: "Lots of data!" };
+      var expected = url + "&" + tddjs.util.urlParams(object);
+
+      ajax.request(url, { data: object, method: "GET" });
+
+      assertEquals(expected, this.xhr.open.args[1]);
+    },
+      
 
   });
 
@@ -158,14 +181,9 @@
   });
 
   TestCase("PostRequestTest", {
-    setUp: function () {
-      this.ajaxRequest = ajax.request;
-    },
-
-    tearDown: function () {
-      ajax.request = this.ajaxRequest;
-    },
-
+    setUp: setUp,
+    tearDown: tearDown,
+    
     "test should call request with POST method": function () {
       ajax.request = stubFn();
 
@@ -173,6 +191,15 @@
 
       assertEquals("POST", ajax.request.args[1].method);
     },
+
+    "test should send data with send() for POST": function () {
+      var object = { field1: "$13", field2: "Lots of data!" };
+      var expected = tddjs.util.urlParams(object);
+
+      ajax.request("/url",  { data: object, method: "POST" });
+
+      assertEquals(expected, this.xhr.send.args[0]);
+    }
   });
 
 })();
