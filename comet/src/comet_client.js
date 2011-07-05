@@ -9,7 +9,9 @@
     }
 
     tddjs.each(data, function (topic, events) {
-      for (var i = 0, l = events.length; i < l; i++) {
+      var length = events && events.length;
+
+      for (var i = 0; i < length; i++) {
         observers.notify(topic, events[i]);
       }
     });
