@@ -88,4 +88,83 @@
     },
 
   });
+
+  TestCase("CometClientObserveTest", {
+    setUp: function () {
+      this.client = Object.create(ajax.cometClient);
+    },
+
+    "test should remember observers": function () {
+      var observers = [stubFn(), stubFn()];
+      this.client.observe("myEvent", observers[0]);
+      this.client.observe("myEvent", observers[1]);
+      var data = { myEvent: [{}] };
+
+      this.client.dispatch(data);
+
+      assert(observers[0].called);
+      assertSame(data.myEvent[0], observers[0].args[0]);
+      assert(observers[1].called);
+      assertSame(data.myEvent[0], observers[1].args[0]);
+    },
+  });
+
+  TestCase("CometClientConnectTest", {
+    setUp: function () {
+      this.client = Object.create(ajax.cometClient);
+      this.ajaxPoll = ajax.poll;
+      this.ajaxCreate = ajax.create;
+      this.xhr = Object.create(fakeXMLHttpRequest);
+      ajax.create = stubFn(this.xhr);
+    },
+
+    tearDown: function () {
+      ajax.poll = this.ajaxPoll;
+      ajax.create = this.ajaxCreate;
+    },
+
+    "test connect should start polling": function () {
+      this.client.url = "/my/url";
+      ajax.poll = stubFn({});
+
+      this.client.connect();
+
+      assert(ajax.poll.called);
+      assertEquals("/my/url", ajax.poll.args[0]);
+    },
+
+    "test should not connect if connected": function () {
+      this.client.url = "/my/url";
+      ajax.poll = stubFn({});
+      this.client.connect();
+      ajax.poll = stubFn({});
+
+      this.client.connect();
+
+      assertFalse(ajax.poll.called);
+    },
+
+    "test should throw error if no url exists": function () {
+      var client = Object.create(ajax.cometClient);
+      ajax.poll = stubFn({});
+
+      assertException(function () {
+        client.connect();
+      }, "TypeError");
+    },
+
+    "test should dispatch data from request": function () {
+      var data = { topic: [{ id: "1234" }],
+                    otherTopic: [{ name: "Me" }] };
+      this.client.url = "/my/url";
+      this.client.dispatch = stubFn();
+
+      this.client.connect();
+      this.xhr.complete(200, JSON.stringify(data));
+
+      assert(this.client.dispatch.called);
+      assertEquals(data, this.client.dispatch.args[0]);
+    },
+
+  });
 })();

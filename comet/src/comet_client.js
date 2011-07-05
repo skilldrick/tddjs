@@ -1,5 +1,6 @@
 (function () {
   var ajax = tddjs.namespace("ajax");
+  var util = tddjs.namespace("util");
 
   function dispatch(data) {
     var observers = this.observers;
@@ -17,7 +18,31 @@
     });
   }
 
+  function observe(topic, observer) {
+    if (!this.observers) {
+      this.observers = Object.create(util.observable);
+    }
+
+    this.observers.observe(topic, observer);
+  }
+
+  function connect() {
+    if (!this.url) {
+      throw new TypeError("client url is null");
+    }
+
+    if (!this.poller) {
+      this.poller = ajax.poll(this.url, {
+        success: function (xhr) {
+          this.dispatch(JSON.parse(xhr.responseText));
+        }.bind(this)
+      });
+    }
+  }
+
   ajax.cometClient = {
-    dispatch: dispatch
+    connect: connect,
+    dispatch: dispatch,
+    observe: observe
   };
 })();

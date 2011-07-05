@@ -17,8 +17,9 @@ var fakeXMLHttpRequest = {
     this.onreadystatechange();
   },
 
-  complete: function (status) {
+  complete: function (status, responseText) {
     this.status = status || 200;
+    this.responseText = responseText;
     this.readyStateChange(4);
   }
 };
