@@ -1,8 +1,14 @@
+require("function-bind");
 var sys = require("sys");
+var Promise = require("node-promise/promise").Promise;
+var EventEmitter = require("events").EventEmitter;
 var id = 0;
 
-var chatRoom = {
-  addMessage: function (user, message, callback) {
+var chatRoom = Object.create(EventEmitter.prototype);
+chatRoom.addMessage = function (user, message) {
+  var promise = new Promise();
+
+  process.nextTick(function () {
     var err = null;
     if (!user) { err = new TypeError("user is null"); }
     if (!message) { err = new TypeError("message is null"); }
@@ -17,17 +23,42 @@ var chatRoom = {
       var id = this.messages.length + 1;
       data = { id: id, user: user, message: message };
       this.messages.push(data);
+      this.emit("message", data);
+      promise.resolve(data);
+    } else {
+      promise.reject(err, true);
     }
+  }.bind(this));
 
-    if (typeof callback == "function") {
-      callback(err, data);
+  return promise;
+};
+
+chatRoom.getMessagesSince = function (id) {
+  var promise = new Promise();
+
+  process.nextTick(function () {
+    promise.resolve((this.messages || []).slice(id));
+  }.bind(this));
+
+  return promise;
+};
+
+chatRoom.waitForMessagesSince = function (id) {
+  var promise = new Promise();
+
+  this.getMessagesSince(id).then(function (messages) {
+    if (messages.length > 0) {
+      promise.resolve(messages);
+    } else {
+      var messageCallback = function (message) {
+        promise.resolve([message]);
+        this.removeListener("message", messageCallback);
+      }.bind(this);
+      this.addListener("message", messageCallback);
     }
-  },
+  }.bind(this));
 
-  getMessagesSince: function (id, callback) {
-    var messages = this.messages || [];
-    callback(null, messages.slice(id));
-  },
+  return promise;
 };
 
 module.exports = chatRoom;
