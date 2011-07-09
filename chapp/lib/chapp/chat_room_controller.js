@@ -1,4 +1,5 @@
 require("function-bind");
+var sys = require("sys");
 
 var chatRoomController = {
   create: function (request, response) {
@@ -17,10 +18,36 @@ var chatRoomController = {
 
     this.request.addListener("end", function () {
       var data = JSON.parse(decodeURI(body)).data;
-      this.chatRoom.addMessage(data.user, data.message);
-      this.response.writeHead(201);
-      this.response.end();
+      this.chatRoom.addMessage(
+        data.user, data.message
+      ).then(function () {
+        this.respond(201, data);
+      }.bind(this), function () {
+        this.respond(500);
+      }.bind(this));
     }.bind(this));
+  },
+
+  get: function () {
+    var id = this.request.headers['x-access-token'] || 0;
+    var wait = this.chatRoom.waitForMessagesSince(id);
+
+    wait.then(function (messages) {
+      this.respond(201, {
+        message: messages,
+        token: messages[messages.length - 1].id
+      });
+    }.bind(this));
+  },
+
+  respond: function (status, data) {
+    var strData = JSON.stringify(data) || "{}";
+    this.response.writeHead(status, {
+      "Content-Type": "application/json",
+      "Content-Length": strData.length
+    });
+    this.response.write(strData);
+    this.response.end();
   }
 };
 
